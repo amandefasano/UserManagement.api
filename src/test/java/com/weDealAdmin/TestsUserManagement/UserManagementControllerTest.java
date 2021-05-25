@@ -9,7 +9,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -32,7 +31,6 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.web.context.WebApplicationContext;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-//import com.weDealAdmin.TestsUserManagement.exceptions.ControllerExceptionHandler.PathVariableIdEqualsZeroException;
 import com.weDealAdmin.TestsUserManagement.model.User;
 import com.weDealAdmin.TestsUserManagement.service.UserCreateDto;
 import com.weDealAdmin.TestsUserManagement.service.UserService;
@@ -85,20 +83,45 @@ class UserManagementControllerTest {
 	}
 	
 	@Test
-	public void testGetUser_httpMethod_contentType_inputDeserialization() throws Exception 
+	public void testGetUser_success() throws Exception 
 	{
-		MockHttpServletRequestBuilder request = get("/users/{username}", "NFLorD")
-				.contentType(MediaType.APPLICATION_JSON);
+		User user = new User();
+		user.setId(9999L);
+		user.setUsername("AtAb");
+		user.setFirstName("Nicolas");
+		user.setLastName("Fasano");
+		user.setEmail("adresse@email.com");
+		user.setPassword("password");
+		
+		MockHttpServletRequestBuilder request = get("/users/{username}", "NFLorD");
+		
+		when(userService.findByUsername(
+			ArgumentMatchers.anyString()
+		))
+			.thenReturn(user);
 		
 		mockMvc.perform(request)
-		.andExpect(status().isOk());
+			.andExpect(status().isOk());
+	}
+	
+	@Test
+	public void testGetUser_notFound() throws Exception 
+	{
+		MockHttpServletRequestBuilder request = get("/users/{username}", "NFLorD");
+
+		when(userService.findByUsername(
+			ArgumentMatchers.anyString()
+		))
+			.thenReturn(null);
+		
+		mockMvc.perform(request)
+			.andExpect(status().isNotFound());
 	}
 	
 	@Test
 	public void testGetUser_serviceCall() throws Exception 
 	{	
-		MockHttpServletRequestBuilder request = get("/users/{username}", "NFLorD")
-				.contentType(MediaType.APPLICATION_JSON);
+		MockHttpServletRequestBuilder request = get("/users/{username}", "NFLorD");
 		
 		mockMvc.perform(request);
 		
@@ -111,38 +134,32 @@ class UserManagementControllerTest {
 	@Test
 	public void testGetUser_outputSerialization() throws Exception 
 	{
+		String username = "NFLorD";
+		
 		User foundUser = new User();
-		foundUser.setId(9999L);
-		foundUser.setUsername("NFLorD");
-		foundUser.setFirstname("Nicolas");
-		foundUser.setLastname("Fasano");
-		foundUser.setEmail("adresse@email.com");
-		foundUser.setPw("password");
+		foundUser.setUsername(username);
 		
 		when(userService.findByUsername(
-				ArgumentMatchers.anyString()
+			ArgumentMatchers.anyString()
 		))
-		.thenReturn(foundUser);
+			.thenReturn(foundUser);
 		
-		MockHttpServletRequestBuilder request = get("/users/{id}", 9999L)
-				.contentType(MediaType.APPLICATION_JSON);
+		MockHttpServletRequestBuilder request = get("/users/{username}", username);
 		
 		mockMvc.perform(request)
-		.andDo(print())
-		.andExpect(content().contentType(MediaType.APPLICATION_JSON))
-		.andExpect(jsonPath("$.username", is("NFLorD")))
-		.andExpect(jsonPath("$.email", is("adresse@email.com")));
+			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
+			.andExpect(jsonPath("$.username", is(username)));
 	}
 	
 	@Test
-	public void testCreate_httpMethod_contentType_inputDeserialization() throws Exception 
+	public void testCreate_created() throws Exception 
 	{
 		UserCreateDto userCreateDto = new UserCreateDto();
 		userCreateDto.setUsername("NFLorD");
-		userCreateDto.setFirstname("Nicolas");
-		userCreateDto.setLastname("Fasano");
+		userCreateDto.setFirstName("Nicolas");
+		userCreateDto.setLastName("Fasano");
 		userCreateDto.setEmail("adresse@email.com");
-		userCreateDto.setPw("password");
+		userCreateDto.setPassword("password");
 		
 		MockHttpServletRequestBuilder request = post("/users")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -153,16 +170,14 @@ class UserManagementControllerTest {
 	}
 	
 	@Test
-	public void testCreate_inputValidation_usernameKO() throws Exception 
+	public void testCreate_usernameTooLong() throws Exception 
 	{
 		UserCreateDto userCreateDto = new UserCreateDto();
-		userCreateDto.setUsername("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopq"
-								+"rstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrst\n"
-								+"uvwxyzabcdefghijklmnopqrstu");
-		userCreateDto.setFirstname("Nicolas");
-		userCreateDto.setLastname("Fasano");
+		userCreateDto.setUsername("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopq");
+		userCreateDto.setFirstName("Nicolas");
+		userCreateDto.setLastName("Fasano");
 		userCreateDto.setEmail("adresse@email.com");
-		userCreateDto.setPw("password");
+		userCreateDto.setPassword("password");
 		
 		MockHttpServletRequestBuilder request = post("/users")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -173,14 +188,31 @@ class UserManagementControllerTest {
 	}
 	
 	@Test
-	public void testCreate_inputValidation_usernameVide() throws Exception 
+	public void testCreate_missingUsername() throws Exception 
+	{
+		UserCreateDto userCreateDto = new UserCreateDto();
+		userCreateDto.setFirstName("Nicolas");
+		userCreateDto.setLastName("Fasano");
+		userCreateDto.setEmail("adresse@email.com");
+		userCreateDto.setPassword("password");
+		
+		MockHttpServletRequestBuilder request = post("/users")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(userCreateDto));
+		
+		mockMvc.perform(request)
+			.andExpect(status().isBadRequest());
+	}
+	
+	@Test
+	public void testCreate_usernameTooShort() throws Exception 
 	{
 		UserCreateDto userCreateDto = new UserCreateDto();
 		userCreateDto.setUsername("");
-		userCreateDto.setFirstname("Nicolas");
-		userCreateDto.setLastname("Fasano");
+		userCreateDto.setFirstName("Nicolas");
+		userCreateDto.setLastName("Fasano");
 		userCreateDto.setEmail("adresse@email.com");
-		userCreateDto.setPw("password");
+		userCreateDto.setPassword("password");
 		
 		MockHttpServletRequestBuilder request = post("/users")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -191,14 +223,14 @@ class UserManagementControllerTest {
 	}
 	
 	@Test
-	public void testCreate_inputValidation_emailKO() throws Exception 
+	public void testCreate_blankEmail() throws Exception 
 	{
 		UserCreateDto userCreateDto = new UserCreateDto();
 		userCreateDto.setUsername("NFLorD");
-		userCreateDto.setFirstname("Nicolas");
-		userCreateDto.setLastname("Fasano");
+		userCreateDto.setFirstName("Nicolas");
+		userCreateDto.setLastName("Fasano");
 		userCreateDto.setEmail("  ");
-		userCreateDto.setPw("password");
+		userCreateDto.setPassword("password");
 		
 		MockHttpServletRequestBuilder request = post("/users")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -209,14 +241,14 @@ class UserManagementControllerTest {
 	}
 	
 	@Test
-	public void testCreate_inputValidation_pwKO() throws Exception 
+	public void testCreate_nullField() throws Exception 
 	{
 		UserCreateDto userCreateDto = new UserCreateDto();
 		userCreateDto.setUsername("NFLorD");
-		userCreateDto.setFirstname("Nicolas");
-		userCreateDto.setLastname("Fasano");
+		userCreateDto.setFirstName("Nicolas");
+		userCreateDto.setLastName("Fasano");
 		userCreateDto.setEmail("adresse@email.com");
-		userCreateDto.setPw(null);
+		userCreateDto.setPassword(null);
 		
 		MockHttpServletRequestBuilder request = post("/users")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -231,10 +263,10 @@ class UserManagementControllerTest {
 	{
 		UserCreateDto userCreateDto = new UserCreateDto();
 		userCreateDto.setUsername("NFLorD");
-		userCreateDto.setFirstname("Nicolas");
-		userCreateDto.setLastname("Fasano");
+		userCreateDto.setFirstName("Nicolas");
+		userCreateDto.setLastName("Fasano");
 		userCreateDto.setEmail("adresse@email.com");
-		userCreateDto.setPw("password");
+		userCreateDto.setPassword("password");
 		
 		MockHttpServletRequestBuilder request = post("/users")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -249,36 +281,63 @@ class UserManagementControllerTest {
 	}
 	
 	@Test
-	public void testUpdate_httpMethod_contentType_inputDeserialization() throws Exception 
+	public void testUpdate_success() throws Exception 
 	{
 		UserUpdateDto userUpdateDto = new UserUpdateDto();
 		userUpdateDto.setId(9999L);
 		userUpdateDto.setUsername("AtAb");
-		userUpdateDto.setFirstname("Nicolas");
-		userUpdateDto.setLastname("Fasano");
+		userUpdateDto.setFirstName("Nicolas");
+		userUpdateDto.setLastName("Fasano");
 		userUpdateDto.setEmail("adresse@email.com");
-		userUpdateDto.setPw("password");
+		userUpdateDto.setPassword("password");
 		
 		MockHttpServletRequestBuilder request = put("/users/{id}", 9999L)
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(userUpdateDto));
+			.contentType(MediaType.APPLICATION_JSON)
+			.content(objectMapper.writeValueAsString(userUpdateDto));
+		
+		when(userService.update(
+			ArgumentMatchers.any(UserUpdateDto.class)
+		))
+			.thenReturn(true);
 		
 		mockMvc.perform(request)
-		.andExpect(status().isNoContent());
+			.andExpect(status().isNoContent());
 	}
 	
 	@Test
-	public void testUpdate_inputValidation_usernameKO() throws Exception 
+	public void testUpdate_notFound() throws Exception 
 	{
 		UserUpdateDto userUpdateDto = new UserUpdateDto();
 		userUpdateDto.setId(9999L);
-		userUpdateDto.setUsername("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopq"
-				+"rstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrst\n"
-				+"uvwxyzabcdefghijklmnopqrstu");
-		userUpdateDto.setFirstname("Nicolas");
-		userUpdateDto.setLastname("Fasano");
+		userUpdateDto.setUsername("AtAb");
+		userUpdateDto.setFirstName("Nicolas");
+		userUpdateDto.setLastName("Fasano");
 		userUpdateDto.setEmail("adresse@email.com");
-		userUpdateDto.setPw("password");
+		userUpdateDto.setPassword("password");
+		
+		MockHttpServletRequestBuilder request = put("/users/{id}", 9999L)
+			.contentType(MediaType.APPLICATION_JSON)
+			.content(objectMapper.writeValueAsString(userUpdateDto));
+		
+		when(userService.update(
+			ArgumentMatchers.any(UserUpdateDto.class)
+		))
+			.thenReturn(false);
+		
+		mockMvc.perform(request)
+			.andExpect(status().isNotFound());
+	}
+	
+	@Test
+	public void testUpdate_usernameTooLong() throws Exception 
+	{
+		UserUpdateDto userUpdateDto = new UserUpdateDto();
+		userUpdateDto.setId(9999L);
+		userUpdateDto.setUsername("abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopq");
+		userUpdateDto.setFirstName("Nicolas");
+		userUpdateDto.setLastName("Fasano");
+		userUpdateDto.setEmail("adresse@email.com");
+		userUpdateDto.setPassword("password");
 		
 		MockHttpServletRequestBuilder request = put("/users/{id}", 9999L)
 				.contentType(MediaType.APPLICATION_JSON)
@@ -289,15 +348,15 @@ class UserManagementControllerTest {
 	}
 	
 	@Test
-	public void testUpdate_inputValidation_usernameVide() throws Exception 
+	public void testUpdate_emptyUsername() throws Exception 
 	{
 		UserUpdateDto userUpdateDto = new UserUpdateDto();
 		userUpdateDto.setId(9999L);
 		userUpdateDto.setUsername("");
-		userUpdateDto.setFirstname("Nicolas");
-		userUpdateDto.setLastname("Fasano");
+		userUpdateDto.setFirstName("Nicolas");
+		userUpdateDto.setLastName("Fasano");
 		userUpdateDto.setEmail("adresse@email.com");
-		userUpdateDto.setPw("password");
+		userUpdateDto.setPassword("password");
 		
 		MockHttpServletRequestBuilder request = put("/users/{id}", 9999L)
 				.contentType(MediaType.APPLICATION_JSON)
@@ -308,15 +367,15 @@ class UserManagementControllerTest {
 	}
 	
 	@Test
-	public void testUpdate_inputValidation_emailKO() throws Exception 
+	public void testUpdate_blankEmail() throws Exception 
 	{
 		UserUpdateDto userUpdateDto = new UserUpdateDto();
 		userUpdateDto.setId(9999L);
 		userUpdateDto.setUsername("AtAb");
-		userUpdateDto.setFirstname("Nicolas");
-		userUpdateDto.setLastname("Fasano");
+		userUpdateDto.setFirstName("Nicolas");
+		userUpdateDto.setLastName("Fasano");
 		userUpdateDto.setEmail(" ");
-		userUpdateDto.setPw("password");
+		userUpdateDto.setPassword("password");
 		
 		MockHttpServletRequestBuilder request = put("/users/{id}", 9999L)
 				.contentType(MediaType.APPLICATION_JSON)
@@ -327,15 +386,15 @@ class UserManagementControllerTest {
 	}
 	
 	@Test
-	public void testUpdate_inputValidation_pwKO() throws Exception 
+	public void testUpdate_nullField() throws Exception 
 	{
 		UserUpdateDto userUpdateDto = new UserUpdateDto();
 		userUpdateDto.setId(9999L);
 		userUpdateDto.setUsername("AtAb");
-		userUpdateDto.setFirstname("Nicolas");
-		userUpdateDto.setLastname("Fasano");
+		userUpdateDto.setFirstName("Nicolas");
+		userUpdateDto.setLastName("Fasano");
 		userUpdateDto.setEmail("adresse@email.com");
-		userUpdateDto.setPw(null);
+		userUpdateDto.setPassword(null);
 		
 		MockHttpServletRequestBuilder request = put("/users/{id}", 9999L)
 				.contentType(MediaType.APPLICATION_JSON)
@@ -351,10 +410,10 @@ class UserManagementControllerTest {
 		UserUpdateDto userUpdateDto = new UserUpdateDto();
 		userUpdateDto.setId(9999L);
 		userUpdateDto.setUsername("AtAb");
-		userUpdateDto.setFirstname("Nicolas");
-		userUpdateDto.setLastname("Fasano");
+		userUpdateDto.setFirstName("Nicolas");
+		userUpdateDto.setLastName("Fasano");
 		userUpdateDto.setEmail("adresse@email.com");
-		userUpdateDto.setPw("password");
+		userUpdateDto.setPassword("password");
 		
 		MockHttpServletRequestBuilder request = put("/users/{id}", 9999L)
 				.contentType(MediaType.APPLICATION_JSON)
@@ -369,14 +428,30 @@ class UserManagementControllerTest {
 	}
 	
 	@Test
-	public void testDelete_httpMethod_contentType_inputDeserialization() throws Exception 
+	public void testDelete_success() throws Exception 
 	{
-		MockHttpServletRequestBuilder request = delete("/users/{id}", 9999L)
-				.contentType(MediaType.APPLICATION_JSON);
+		MockHttpServletRequestBuilder request = delete("/users/{id}", 9999L);
+		
+		when(userService.delete(
+			ArgumentMatchers.anyLong()
+		))
+			.thenReturn(true);
 		
 		mockMvc.perform(request)
-		.andDo(print())
-		.andExpect(status().isNoContent());
+			.andExpect(status().isNoContent());
 	}
-
+	
+	@Test
+	public void testDelete_notFound() throws Exception 
+	{
+		MockHttpServletRequestBuilder request = delete("/users/{id}", 9999L);
+		
+		when(userService.delete(
+			ArgumentMatchers.anyLong()
+		))
+			.thenReturn(false);
+		
+		mockMvc.perform(request)
+			.andExpect(status().isNotFound());
+	}
 }

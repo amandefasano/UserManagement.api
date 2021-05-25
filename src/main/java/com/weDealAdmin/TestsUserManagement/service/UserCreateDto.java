@@ -11,17 +11,20 @@ import lombok.Data;
 @Component
 public class UserCreateDto {
 	
-	@Size(min = 1, max = 150)
+	@NotBlank
+	@Size(min = 1, max = 30)
 	private String username;
-	
-	private String firstname;
-	
-	private String lastname;
+
+	@NotBlank
+	private String firstName;
+
+	@NotBlank
+	private String lastName;
 	
 	@NotBlank
 	private String email;
 	
 	@NotBlank
-	private String pw;
+	private String password;
 
 }

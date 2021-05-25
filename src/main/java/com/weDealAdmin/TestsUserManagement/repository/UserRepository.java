@@ -17,30 +17,30 @@ public interface UserRepository extends JpaRepository<User, Long>{
 	 * @param 
 	 * @return
 	 */
-	@Query(value = "SELECT id, username, firstname, lastname, email, pw FROM users", nativeQuery = true)
+	@Query(value = "SELECT id, username, first_name, last_name, email, `password` FROM users", nativeQuery = true)
 	List<User> findAll();
 	
 	/**
 	 * @param id
 	 * @return 
 	 */
-	@Query(value = "SELECT id, username, firstname, lastname, email, pw FROM users WHERE username = ?1", nativeQuery = true)
+	@Query(value = "SELECT id, username, first_name, last_name, email, `password` FROM users WHERE username = ?1", nativeQuery = true)
 	User findByUsername(String username);
 	
 	/**
 	 * @param username
-	 * @param firstname
-	 * @param lastname
+	 * @param firstName
+	 * @param lastName
 	 * @param email
 	 * @param password
 	 * @return 
 	 */
-	@Query(value = "INSERT INTO users (username, firstname, lastname, email, pw) VALUES (?1, ?2, ?3, ?4, ?5)", nativeQuery = true)
+	@Query(value = "INSERT INTO users (username, first_name, last_name, email, `password`) VALUES (?1, ?2, ?3, ?4, ?5)", nativeQuery = true)
 	@Modifying
-	void create(
+	int create(
 		String username, 
-		String firstname, 
-		String lastname, 
+		String firstName, 
+		String lastName, 
 		String email, 
 		String password
 	);
@@ -48,19 +48,19 @@ public interface UserRepository extends JpaRepository<User, Long>{
 	/**
 	 * @param id
 	 * @param username
-	 * @param firstname
-	 * @param lastname
+	 * @param firstName
+	 * @param lastName
 	 * @param email
 	 * @param password
 	 * @return 
 	 */
-	@Query(value = "UPDATE users SET username = ?2, firstname = ?3, lastname = ?4, email = ?5, pw = ?6 WHERE id = ?1", nativeQuery = true)
+	@Query(value = "UPDATE users SET username = ?2, first_name = ?3, last_name = ?4, email = ?5, `password` = ?6 WHERE id = ?1", nativeQuery = true)
 	@Modifying
-	void update(
+	int update(
 		Long id,
 		String username, 
-		String firstname, 
-		String lastname, 
+		String firstName, 
+		String lastName, 
 		String email, 
 		String password
 	);
@@ -72,5 +72,5 @@ public interface UserRepository extends JpaRepository<User, Long>{
 	 */
 	@Query(value = "DELETE FROM users WHERE id = ?1", nativeQuery = true)
 	@Modifying
-	void delete(Long id);
+	int delete(Long id);
 }

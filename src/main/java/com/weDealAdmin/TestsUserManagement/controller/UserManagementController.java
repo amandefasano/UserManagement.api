@@ -6,7 +6,7 @@ import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,19 +29,21 @@ public class UserManagementController
 	@Autowired
 	private UserService userService;
 	
-	@GetMapping("/{username}")
-	public User getUser (@PathVariable("username") String username)
-	{
-			return userService.findByUsername(username);
-	}
-	
 	@GetMapping("")
-	@CrossOrigin(origins = "*")
 	public List<User> getUsers ()
 	{
 		List<User> users = userService.findAll();
 		
 		return users;
+	}
+	
+	@GetMapping("/{username}")
+	public ResponseEntity<User> getUser (@PathVariable("username") String username)
+	{
+		User user = userService.findByUsername(username);
+		HttpStatus status = null != user ? HttpStatus.OK : HttpStatus.NOT_FOUND;
+		
+		return ResponseEntity.status(status).body(user);
 	}
 	
 	@PostMapping("")
@@ -53,20 +55,22 @@ public class UserManagementController
 	}
 	
 	@PutMapping("/{id}")
-	@ResponseStatus(HttpStatus.NO_CONTENT)
-	public void update (
+	public ResponseEntity<?> update (
 		@PathVariable("id") Long id, 
 		@Valid @RequestBody UserUpdateDto userUpdateDto
 	) {
-		userUpdateDto.setId(id);
-		userService.update(userUpdateDto);
+		boolean success = userService.update(userUpdateDto);
+		HttpStatus status = success ? HttpStatus.NO_CONTENT : HttpStatus.NOT_FOUND;
+		
+		return ResponseEntity.status(status).build();
 	}
 	
 	@DeleteMapping("/{id}")
-	@ResponseStatus(HttpStatus.NO_CONTENT)
-	public void delete (@PathVariable("id") Long id)
+	public ResponseEntity<?> delete (@PathVariable("id") Long id)
 	{
-		userService.delete(id);
+		boolean success = userService.delete(id);
+		HttpStatus status = success ? HttpStatus.NO_CONTENT : HttpStatus.NOT_FOUND;
+		
+		return ResponseEntity.status(status).build();
 	}
 }
-

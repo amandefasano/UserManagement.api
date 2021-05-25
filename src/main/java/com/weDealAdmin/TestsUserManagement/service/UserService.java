@@ -28,38 +28,32 @@ public class UserService {
 		return userRepository.findByUsername(username);
 	}
 	
-	public void create(UserCreateDto userCreateDto) 
-	{	
-		String username = userCreateDto.getUsername();
-		String firstname = userCreateDto.getFirstname();
-		String lastname = userCreateDto.getLastname();
-		String email = userCreateDto.getEmail();
-		String password = userCreateDto.getPw();
-		
-		userRepository.create(
-				username,
-				firstname,
-				lastname,
-				email,
-				password
-			);
-	}
-	
-	public void update(UserUpdateDto userUpdateDto) 
-	{	
-		userRepository.update(
-			userUpdateDto.getId(),
-			userUpdateDto.getUsername(),
-			userUpdateDto.getFirstname(),
-			userUpdateDto.getLastname(),
-			userUpdateDto.getEmail(),
-			userUpdateDto.getPw()
+	public boolean create(UserCreateDto userCreateDto) 
+	{
+		return 0 != userRepository.create(
+			userCreateDto.getUsername(),
+			userCreateDto.getFirstName(),
+			userCreateDto.getLastName(),
+			userCreateDto.getEmail(),
+			userCreateDto.getPassword()
 		);
 	}
 	
-	public void delete(Long id) 
+	public boolean update(UserUpdateDto userUpdateDto) 
+	{	
+		return 0 != userRepository.update(
+			userUpdateDto.getId(),
+			userUpdateDto.getUsername(),
+			userUpdateDto.getFirstName(),
+			userUpdateDto.getLastName(),
+			userUpdateDto.getEmail(),
+			userUpdateDto.getPassword()
+		);
+	}
+	
+	public boolean delete(Long id) 
 	{
-		userRepository.delete(id);
+		return 0 != userRepository.delete(id);
 	}
 
 }

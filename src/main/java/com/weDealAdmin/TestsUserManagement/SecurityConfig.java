@@ -14,5 +14,11 @@
 //    {    	
 //	     security.httpBasic().disable();
 //	     security.formLogin().disable();
+//
+//	     security
+//	         .headers()
+//	         .xssProtection()
+//	         .and()
+//	         .contentSecurityPolicy("script-src 'self'");
 //    }
 //}

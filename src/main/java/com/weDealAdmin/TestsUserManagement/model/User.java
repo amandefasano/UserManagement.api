@@ -6,8 +6,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
-
-import com.sun.istack.NotNull;
+import javax.validation.constraints.NotBlank;
 
 import lombok.Data;
 
@@ -22,22 +21,24 @@ public class User
 	private Long id;
 	
 	@Column(unique = true)
-	@NotNull
+	@NotBlank
 	private String username;
 	
 	@Column
-	private String firstname;
+	@NotBlank
+	private String firstName;
 	
 	@Column
-	private String lastname;
+	@NotBlank
+	private String lastName;
 	
 	@Column
-	@NotNull
+	@NotBlank
 	private String email;
 	
 	@Column
-	@NotNull
-	private String pw;
+	@NotBlank
+	private String password;
 	
 //	private CompanyTyped companyTyped;
 //	private Role role;
